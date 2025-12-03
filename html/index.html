@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>PVP Arena</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { background: transparent !important; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; color: #fff; overflow: hidden; }
+        
+        #container {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        #container.show { display: flex; }
+        
+        .panel {
+            width: 620px;
+            background: linear-gradient(145deg, rgba(15,20,30,0.95), rgba(10,15,20,0.98));
+            border: 1px solid rgba(0,170,255,0.2);
+            border-radius: 20px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.6), 0 0 40px rgba(0,170,255,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            background: linear-gradient(90deg, rgba(0,170,255,0.1), transparent);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .logo { display: flex; align-items: center; gap: 12px; }
+        
+        .logo-icon {
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, #00aaff, #0066cc);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 20px rgba(0,170,255,0.4);
+        }
+        .logo-icon svg { width: 22px; height: 22px; fill: #fff; }
+        
+        .logo h1 {
+            font-size: 20px; font-weight: 700;
+            background: linear-gradient(135deg, #00aaff, #00ddff);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        
+        .close-btn {
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: #888; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .close-btn:hover { background: rgba(255,70,100,0.2); border-color: rgba(255,70,100,0.5); color: #ff4666; }
+        .close-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; }
+        
+        .tabs {
+            display: flex; gap: 4px; padding: 4px;
+            margin: 16px 20px 0;
+            background: rgba(0,0,0,0.3);
+            border-radius: 14px;
+        }
+        
+        .tab-btn {
+            flex: 1; padding: 12px 16px;
+            background: transparent; border: none; border-radius: 10px;
+            color: #666; cursor: pointer;
+            font-size: 13px; font-weight: 600;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .tab-btn:hover { color: #aaa; background: rgba(255,255,255,0.03); }
+        .tab-btn.active { color: #00aaff; background: rgba(0,170,255,0.15); box-shadow: 0 0 20px rgba(0,170,255,0.15); }
+        .tab-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; }
+        
+        .content { padding: 20px; }
+        .tab-page { display: none; }
+        .tab-page.active { display: block; }
+        
+        .btn {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; padding: 16px 24px; margin: 10px 0;
+            border: none; border-radius: 14px;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+        }
+        .btn svg { width: 18px; height: 18px; fill: currentColor; }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #00aaff, #0077cc);
+            color: #fff; box-shadow: 0 4px 25px rgba(0,170,255,0.4);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 35px rgba(0,170,255,0.5); }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #ff9500, #ff6600);
+            color: #fff; box-shadow: 0 4px 25px rgba(255,149,0,0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4666, #cc2244);
+            color: #fff; box-shadow: 0 4px 25px rgba(255,70,100,0.3);
+        }
+        
+        .btn-ghost {
+            background: rgba(255,255,255,0.05);
+            color: #aaa; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        
+        .hidden { display: none !important; }
+        
+        .info-box {
+            margin-top: 20px;
+            background: rgba(0,0,0,0.25);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px;
+        }
+        
+        .info-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: #666; font-size: 14px; }
+        .info-value { color: #00aaff; font-weight: 700; font-size: 14px; }
+        .info-value.active { color: #44dd88; }
+        .info-value.queue { color: #ffaa00; }
+        
+        .queue-area { text-align: center; padding: 30px 20px; }
+        
+        .queue-icon {
+            width: 90px; height: 90px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, #1a1f2e, #0d1117);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 24px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .queue-icon.searching {
+            background: linear-gradient(135deg, #00aaff, #0066cc);
+            box-shadow: 0 0 40px rgba(0,170,255,0.4);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        
+        .queue-icon svg { width: 40px; height: 40px; stroke: #555; fill: none; transition: all 0.3s ease; }
+        .queue-icon.searching svg { stroke: #fff; animation: spin 2s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        .queue-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+        .queue-subtitle { color: #666; font-size: 14px; margin-bottom: 24px; }
+        
+        .queue-timer {
+            font-size: 48px; font-weight: 800; font-family: 'Consolas', monospace;
+            background: linear-gradient(135deg, #00aaff, #00ddff);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 24px;
+        }
+        
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        
+        .stat-box {
+            background: rgba(0,0,0,0.25);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 24px 16px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        .stat-box:hover { transform: translateY(-4px); border-color: rgba(0,170,255,0.3); }
+        
+        .stat-value { font-size: 36px; font-weight: 800; margin-bottom: 6px; }
+        .stat-value.cyan { color: #00aaff; }
+        .stat-value.red { color: #ff4666; }
+        .stat-value.orange { color: #ff9500; }
+        .stat-value.green { color: #44dd88; }
+        .stat-label { color: #555; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .lb-list { max-height: 300px; overflow-y: auto; }
+        
+        .lb-entry {
+            display: flex; align-items: center;
+            padding: 14px 16px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+        .lb-entry:hover { transform: translateX(4px); border-color: rgba(0,170,255,0.2); }
+        .lb-entry.gold { border-color: rgba(255,200,0,0.4); background: linear-gradient(90deg, rgba(255,200,0,0.1), transparent); }
+        .lb-entry.silver { border-color: rgba(180,180,190,0.3); background: linear-gradient(90deg, rgba(180,180,190,0.08), transparent); }
+        .lb-entry.bronze { border-color: rgba(200,130,60,0.3); background: linear-gradient(90deg, rgba(200,130,60,0.08), transparent); }
+        
+        .lb-rank { width: 40px; font-weight: 800; font-size: 15px; color: #555; }
+        .lb-entry.gold .lb-rank { color: #ffc800; }
+        .lb-entry.silver .lb-rank { color: #b4b4be; }
+        .lb-entry.bronze .lb-rank { color: #c8823c; }
+        .lb-name { flex: 1; font-weight: 600; }
+        .lb-score { color: #00aaff; font-weight: 700; font-size: 13px; }
+        
+        .empty { text-align: center; padding: 40px; color: #555; }
+        .empty svg { width: 48px; height: 48px; stroke: #333; margin-bottom: 16px; }
+        
+        #game-hud {
+            position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+            background: rgba(10,15,20,0.95);
+            border: 1px solid rgba(0,170,255,0.2);
+            border-radius: 16px;
+            padding: 16px 32px;
+            display: none;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        #game-hud.show { display: block; }
+        
+        .hud-content { display: flex; align-items: center; gap: 20px; }
+        .hud-round { color: #666; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .hud-score { font-size: 36px; font-weight: 800; }
+        .hud-p1 { color: #00aaff; text-shadow: 0 0 20px rgba(0,170,255,0.5); }
+        .hud-vs { color: #444; font-size: 14px; font-weight: 700; }
+        .hud-p2 { color: #ff4666; text-shadow: 0 0 20px rgba(255,70,100,0.5); }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div class="panel">
+            <div class="header">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <h1>ARENA PVP</h1>
+                </div>
+                <button class="close-btn" id="closeBtn">
+                    <svg viewBox="0 0 24 24" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="home">
+                    <svg viewBox="0 0 24 24" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    Home
+                </button>
+                <button class="tab-btn" data-tab="queue">
+                    <svg viewBox="0 0 24 24" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    Coda
+                </button>
+                <button class="tab-btn" data-tab="leaderboard">
+                    <svg viewBox="0 0 24 24" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                    Top 10
+                </button>
+                <button class="tab-btn" data-tab="stats">
+                    <svg viewBox="0 0 24 24" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    Stats
+                </button>
+            </div>
+            
+            <div class="content">
+                <div id="page-home" class="tab-page active">
+                    <button class="btn btn-primary" id="btnPlay">
+                        <svg viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"/></svg>
+                        Gioca 1v1
+                    </button>
+                    <button class="btn btn-secondary" id="btnLb">
+                        <svg viewBox="0 0 20 20"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z"/></svg>
+                        Classifica
+                    </button>
+                    <button class="btn btn-danger hidden" id="btnLeave">
+                        <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
+                        Abbandona
+                    </button>
+                    
+                    <div class="info-box">
+                        <div class="info-row">
+                            <span class="info-label">Stato</span>
+                            <span class="info-value" id="statusText">In attesa</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Giocatori in coda</span>
+                            <span class="info-value" id="queueCount">0</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Formato</span>
+                            <span class="info-value">Best of 5</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="page-queue" class="tab-page">
+                    <div class="queue-area">
+                        <div class="queue-icon" id="queueIconBox">
+                            <svg id="queueIconSvg" viewBox="0 0 24 24" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </div>
+                        <div class="queue-title" id="queueTitle">Matchmaking</div>
+                        <div class="queue-subtitle" id="queueSubtitle">Trova un avversario e combatti</div>
+                        <div class="queue-timer hidden" id="queueTimer">00:00</div>
+                        <button class="btn btn-primary" id="btnStartQueue">
+                            <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg>
+                            Cerca Partita
+                        </button>
+                        <button class="btn btn-ghost hidden" id="btnCancelQueue">
+                            <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                            Annulla Ricerca
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="page-leaderboard" class="tab-page">
+                    <button class="btn btn-secondary" id="btnRefreshLb" style="margin-bottom: 16px;">
+                        <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg>
+                        Aggiorna
+                    </button>
+                    <div class="lb-list" id="lbList">
+                        <div class="empty">
+                            <svg viewBox="0 0 24 24" stroke-width="2" fill="none"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                            <p>Caricamento...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="page-stats" class="tab-page">
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-value cyan" id="statWins">0</div>
+                            <div class="stat-label">Vittorie</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value red" id="statLosses">0</div>
+                            <div class="stat-label">Sconfitte</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value orange" id="statKills">0</div>
+                            <div class="stat-label">Kills</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value green" id="statWinrate">0%</div>
+                            <div class="stat-label">Win Rate</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="game-hud">
+        <div class="hud-content">
+            <span class="hud-round" id="hudRound">ROUND 1/5</span>
+            <span class="hud-score hud-p1" id="hudP1">0</span>
+            <span class="hud-vs">VS</span>
+            <span class="hud-score hud-p2" id="hudP2">0</span>
+        </div>
+    </div>
+
+    <script>
+        var container = document.getElementById('container');
+        var hud = document.getElementById('game-hud');
+        var searching = false;
+        var timerSeconds = 0;
+        var timerInterval = null;
+        
+        document.querySelectorAll('.tab-btn').forEach(function(btn) {
+            btn.onclick = function() { switchTab(this.getAttribute('data-tab')); };
+        });
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.tab-page').forEach(function(p) { p.classList.remove('active'); });
+            document.querySelector('[data-tab="' + tabName + '"]').classList.add('active');
+            document.getElementById('page-' + tabName).classList.add('active');
+            if (tabName === 'leaderboard') fetchNUI('get_leaderboard', {});
+            if (tabName === 'stats') fetchNUI('get_stats', {});
+        }
+        
+        document.getElementById('closeBtn').onclick = closeUI;
+        document.getElementById('btnPlay').onclick = joinQueue;
+        document.getElementById('btnLb').onclick = function() { switchTab('leaderboard'); };
+        document.getElementById('btnLeave').onclick = leaveMatch;
+        document.getElementById('btnStartQueue').onclick = joinQueue;
+        document.getElementById('btnCancelQueue').onclick = leaveQueue;
+        document.getElementById('btnRefreshLb').onclick = function() { fetchNUI('get_leaderboard', {}); };
+        
+        function openUI(data) {
+            container.classList.add('show');
+            if (data && data.inQueue) setSearching(true);
+            if (data && data.inGame) {
+                document.getElementById('btnLeave').classList.remove('hidden');
+                document.getElementById('statusText').textContent = 'In partita';
+                document.getElementById('statusText').className = 'info-value active';
+            }
+        }
+        
+        function closeUI() {
+            container.classList.remove('show');
+            fetchNUI('close', {});
+        }
+        
+        function joinQueue() {
+            if (searching) return;
+            fetchNUI('join_queue', {});
+            setSearching(true);
+        }
+        
+        function leaveQueue() {
+            fetchNUI('leave_queue', {});
+            setSearching(false);
+        }
+        
+        function leaveMatch() {
+            fetchNUI('leave_match', {});
+            closeUI();
+        }
+        
+        function setSearching(isSearching) {
+            searching = isSearching;
+            var iconBox = document.getElementById('queueIconBox');
+            var iconSvg = document.getElementById('queueIconSvg');
+            
+            if (isSearching) {
+                iconBox.classList.add('searching');
+                iconSvg.innerHTML = '<path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>';
+                document.getElementById('queueTitle').textContent = 'Ricerca in corso';
+                document.getElementById('queueSubtitle').textContent = 'Attendendo un avversario...';
+                document.getElementById('queueTimer').classList.remove('hidden');
+                document.getElementById('btnStartQueue').classList.add('hidden');
+                document.getElementById('btnCancelQueue').classList.remove('hidden');
+                document.getElementById('statusText').textContent = 'In coda';
+                document.getElementById('statusText').className = 'info-value queue';
+                
+                timerSeconds = 0;
+                clearInterval(timerInterval);
+                timerInterval = setInterval(function() {
+                    timerSeconds++;
+                    var m = Math.floor(timerSeconds / 60);
+                    var s = timerSeconds % 60;
+                    document.getElementById('queueTimer').textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+                }, 1000);
+            } else {
+                iconBox.classList.remove('searching');
+                iconSvg.innerHTML = '<path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>';
+                document.getElementById('queueTitle').textContent = 'Matchmaking';
+                document.getElementById('queueSubtitle').textContent = 'Trova un avversario e combatti';
+                document.getElementById('queueTimer').classList.add('hidden');
+                document.getElementById('btnStartQueue').classList.remove('hidden');
+                document.getElementById('btnCancelQueue').classList.add('hidden');
+                document.getElementById('statusText').textContent = 'In attesa';
+                document.getElementById('statusText').className = 'info-value';
+                clearInterval(timerInterval);
+            }
+        }
+        
+        function updateLeaderboard(data) {
+            var el = document.getElementById('lbList');
+            if (!data || data.length === 0) {
+                el.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" stroke-width="2" fill="none"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg><p>Nessun dato</p></div>';
+                return;
+            }
+            var html = '';
+            for (var i = 0; i < data.length; i++) {
+                var p = data[i];
+                var cls = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+                html += '<div class="lb-entry ' + cls + '">';
+                html += '<span class="lb-rank">#' + (i + 1) + '</span>';
+                html += '<span class="lb-name">' + (p.name || 'Player') + '</span>';
+                html += '<span class="lb-score">' + (p.wins || 0) + 'W / ' + (p.kills || 0) + 'K</span>';
+                html += '</div>';
+            }
+            el.innerHTML = html;
+        }
+        
+        function updateStats(data) {
+            if (!data) return;
+            document.getElementById('statWins').textContent = data.wins || 0;
+            document.getElementById('statLosses').textContent = data.losses || 0;
+            document.getElementById('statKills').textContent = data.kills || 0;
+            var total = (data.wins || 0) + (data.losses || 0);
+            var wr = total > 0 ? Math.round((data.wins / total) * 100) : 0;
+            document.getElementById('statWinrate').textContent = wr + '%';
+        }
+        
+        function showHUD(data) {
+            hud.classList.add('show');
+            document.getElementById('hudRound').textContent = 'ROUND 1/' + (data.rounds || 5);
+            document.getElementById('hudP1').textContent = '0';
+            document.getElementById('hudP2').textContent = '0';
+        }
+        
+        function hideHUD() { hud.classList.remove('show'); }
+        
+        function fetchNUI(eventName, data) {
+            fetch('https://neon_pvp/' + eventName, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).catch(function() {});
+        }
+        
+        window.addEventListener('message', function(event) {
+            var data = event.data;
+            if (data.type === 'open') openUI(data);
+            else if (data.type === 'close') container.classList.remove('show');
+            else if (data.type === 'queue_joined') setSearching(true);
+            else if (data.type === 'queue_left') setSearching(false);
+            else if (data.type === 'queue_count') document.getElementById('queueCount').textContent = data.count || 0;
+            else if (data.type === 'match_start') {
+                setSearching(false);
+                container.classList.remove('show');
+                document.getElementById('btnLeave').classList.remove('hidden');
+                document.getElementById('statusText').textContent = 'In partita';
+                document.getElementById('statusText').className = 'info-value active';
+                showHUD(data);
+            }
+            else if (data.type === 'match_end') {
+                hideHUD();
+                document.getElementById('btnLeave').classList.add('hidden');
+                document.getElementById('statusText').textContent = 'In attesa';
+                document.getElementById('statusText').className = 'info-value';
+            }
+            else if (data.type === 'score_update') {
+                document.getElementById('hudP1').textContent = data.myScore || 0;
+                document.getElementById('hudP2').textContent = data.enemyScore || 0;
+                document.getElementById('hudRound').textContent = 'ROUND ' + (data.round || 1) + '/5';
+            }
+            else if (data.type === 'leaderboard') updateLeaderboard(data.data);
+            else if (data.type === 'stats') updateStats(data.data);
+        });
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeUI();
+        });
+    </script>
+</body>
+</html>
